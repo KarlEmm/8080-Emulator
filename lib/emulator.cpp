@@ -223,8 +223,8 @@ void Emulator::emulateOp() {
             break;
         }
         case 0x21: { // LXI_H
-            status_.h = mem[pc + 1];
-            status_.l = mem[pc + 2];
+            status_.l = mem[pc + 1];
+            status_.h = mem[pc + 2];
             status_.pc += 2;
             break;
         }
@@ -284,6 +284,121 @@ void Emulator::emulateOp() {
             status_.h = mem[offset+1];
 
             status_.pc += 2;
+            break;
+        }
+        case 0x2b: { // DCX_H
+            uint16_t hl = ((uint16_t) status_.h << 8) | ((uint16_t) status_.l);
+            mem[hl] = mem[hl] - 1;
+            break;
+        }
+        case 0x2c: { // INR_L
+            uint16_t tmp = (uint16_t) status_.l + 1;
+            updateControls(tmp, {SIGN, ZERO, PARITY});
+            status_.l = (tmp & 0xff);
+            break;
+        }
+        case 0x2d: { // DCR_L
+            uint16_t tmp = status_.l - 1;
+            updateControls(tmp, {SIGN, ZERO, PARITY});
+            status_.l = (tmp & 0xff);
+            break;
+        }
+        case 0x2e: { // MVI_L
+            status_.l = mem[pc + 1];
+            ++status_.pc;
+            break;
+        }
+        case 0x2f: { // CMA
+            status_.a = ~status_.a;
+            break;
+        }
+        case 0x30: { // NOP
+            break;
+        }
+        case 0x31: { // LXI_SP
+            Byte lo = mem[pc + 1];
+            Byte hi = mem[pc + 2];
+            status_.sp = (hi << 8) | (lo);
+            status_.pc += 2;
+            break;
+        }
+        case 0x32: { // STA
+            Byte lo = mem[pc + 1];
+            Byte hi = mem[pc + 2];
+            uint16_t addr = (hi << 8) | (lo);
+            mem[addr] = status_.a;
+            status_.pc += 2;
+            break;
+        }
+        case 0x33: { // INX_SP
+            status_.sp += 1;
+            break;
+        }
+        case 0x34: { // INR_M
+            uint16_t offset =  (status_.h << 8) | (status_.l);
+            uint16_t tmp = mem[offset];
+            tmp += 1;
+            updateControls(tmp, {SIGN, ZERO, PARITY});
+            mem[offset] = (tmp & 0xff);
+            break;
+        }
+        case 0x35: { // DCR_M
+            uint16_t offset =  (status_.h << 8) | (status_.l);
+            uint16_t tmp = mem[offset];
+            tmp -= 1;
+            updateControls(tmp, {SIGN, ZERO, PARITY});
+            mem[offset] = (tmp & 0xff);
+            break;
+        }
+        case 0x36: { // MVI_M
+            uint16_t offset =  (status_.h << 8) | (status_.l);
+            mem[offset] = mem[pc + 1];
+            ++status_.pc;
+            break;
+        }
+        case 0x37: { // STC
+            status_.controls.c = true;
+            break;
+        }
+        case 0x38: { // NOP
+            break;
+        }
+        case 0x39: { // DAD_SP
+            uint16_t hl = (status_.h << 8) | (status_.l);
+            uint16_t tmp = status_.sp + mem[hl];
+            mem[hl] = tmp;
+            updateControls(tmp, {CARRY});
+            break;
+        }
+        case 0x3a: { // LDA
+            uint16_t offset = (mem[pc + 2] << 8) | (mem[pc + 1]);
+            status_.a = mem[offset];
+            status_.pc += 2;
+            break;
+        }
+        case 0x3b: { // DCX_SP
+            status_.sp -= 1;
+            break;
+        }
+        case 0x3c: { // INR_A
+            uint16_t tmp = (uint16_t) status_.a + 1;
+            updateControls(tmp, {SIGN, ZERO, PARITY});
+            status_.a = (tmp & 0xff);
+            break;
+        }
+        case 0x3d: { // DCR_A
+            uint16_t tmp = status_.a - 1;
+            updateControls(tmp, {SIGN, ZERO, PARITY});
+            status_.a = (tmp & 0xff);
+            break;
+        }
+        case 0x3e: { // MVI_A
+            status_.a = mem[pc + 1];
+            ++status_.pc;
+            break;
+        }
+        case 0x3f: { // CMC
+            status_.controls.c = !status_.controls.c;
             break;
         }
     }

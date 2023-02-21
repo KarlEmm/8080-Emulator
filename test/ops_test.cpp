@@ -234,3 +234,42 @@ TEST_F(StatusTest, LHLD) {
     EXPECT_EQ(status.l, 0x12);
     EXPECT_EQ(status.h, 0x23);
 }
+
+TEST_F(StatusTest, CMA) {
+    status.memory[0] = 0x2f;
+    status.a = 0x9a;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.a, 0x65);
+}
+
+TEST_F(StatusTest, LXI_SP) {
+    status.memory[0] = 0x31;
+    status.memory[1] = 0x81;
+    status.memory[2] = 0x03;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.sp, 0x0381);
+}
+
+TEST_F(StatusTest, INR_M) {
+    status.memory[0] = 0x34;
+    status.h = 0x04;
+    status.l = 0x03;
+    status.memory[0x0403] = 0x02;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.memory[0x0403], 0x03);
+    EXPECT_FALSE(status.controls.s);
+    EXPECT_TRUE(status.controls.p);
+    EXPECT_FALSE(status.controls.z);
+}
+
+TEST_F(StatusTest, CMC) {
+    status.memory[0] = 0x3f;
+    status.controls.c = true;
+    emulator_.emulateOp();
+    EXPECT_FALSE(status.controls.c);
+
+    status.pc = 0;
+    status.controls.c = false;
+    emulator_.emulateOp();
+    EXPECT_TRUE(status.controls.c);
+}
