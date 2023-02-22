@@ -657,6 +657,102 @@ void Emulator::emulateOp() {
             status_.a = status_.a;
             break;
         }
+        case 0x80: { // ADD_B
+            uint16_t tmp = (uint16_t) status_.a + (uint16_t) status_.b;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x81: { // ADD_C
+            uint16_t tmp = (uint16_t) status_.a + (uint16_t) status_.c;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x82: { // ADD_D
+            uint16_t tmp = (uint16_t) status_.a + (uint16_t) status_.d;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x83: { // ADD_E
+            uint16_t tmp = (uint16_t) status_.a + (uint16_t) status_.e;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x84: { // ADD_H
+            uint16_t tmp = (uint16_t) status_.a + (uint16_t) status_.h;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x85: { // ADD_L
+            uint16_t tmp = (uint16_t) status_.a + (uint16_t) status_.l;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x86: { // ADD_M
+            uint16_t tmp = (uint16_t) status_.a + (uint16_t) mem[(status_.h << 8) | (status_.l)];
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x87: { // ADD_A
+            uint16_t tmp = (uint16_t) status_.a + (uint16_t) status_.a;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x88: { // ADC_B
+            uint16_t tmp = (uint16_t) status_.a + (uint16_t) status_.b + (uint16_t) status_.controls.c;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x89: { // ADC_C
+            uint16_t tmp = (uint16_t) status_.a + (uint16_t) status_.c + (uint16_t) status_.controls.c;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x8a: { // ADC_D
+            uint16_t tmp = (uint16_t) status_.a + (uint16_t) status_.d + (uint16_t) status_.controls.c;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x8b: { // ADC_E
+            uint16_t tmp = (uint16_t) status_.a + (uint16_t) status_.e + (uint16_t) status_.controls.c;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x8c: { // ADC_H
+            uint16_t tmp = (uint16_t) status_.a + (uint16_t) status_.h + (uint16_t) status_.controls.c;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x8d: { // ADC_L
+            uint16_t tmp = (uint16_t) status_.a + (uint16_t) status_.l + (uint16_t) status_.controls.c;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x8e: { // ADC_M
+            uint16_t tmp = (uint16_t) status_.a + (uint16_t) mem[(status_.h << 8) | (status_.l)] + (uint16_t) status_.controls.c;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x8f: { // ADC_A
+            uint16_t tmp = (uint16_t) status_.a + (uint16_t) status_.a + (uint16_t) status_.controls.c;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
     }
 
 //    uint8_t bytesInOp = 1;

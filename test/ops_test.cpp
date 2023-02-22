@@ -283,3 +283,45 @@ TEST_F(StatusTest,  MOV_BM) {
     emulator_.emulateOp();
     EXPECT_EQ(status.b, 0x11);
 }
+
+TEST_F(StatusTest,  ADD_B) {
+    status.memory[0] = 0x80;
+    status.a = 0x80;
+    status.b = 0x81;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.a, 0x01);
+    EXPECT_TRUE(status.controls.c);
+
+    status.pc = 0;
+    status.a = 0x10;
+    status.b = 0x81;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.a, 0x91);
+    EXPECT_FALSE(status.controls.c);
+}
+
+TEST_F(StatusTest,  ADC_B) {
+    status.memory[0] = 0x88;
+    status.a = 0x80;
+    status.b = 0x81;
+    status.controls.c = true;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.a, 0x02);
+    EXPECT_TRUE(status.controls.c);
+
+    status.pc = 0;
+    status.a = 0x10;
+    status.b = 0x81;
+    status.controls.c = true;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.a, 0x92);
+    EXPECT_FALSE(status.controls.c);
+
+    status.pc = 0;
+    status.a = 0x10;
+    status.b = 0x81;
+    status.controls.c = false;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.a, 0x91);
+    EXPECT_FALSE(status.controls.c);
+}
