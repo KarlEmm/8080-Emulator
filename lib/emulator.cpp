@@ -263,7 +263,7 @@ void Emulator::emulateOp() {
             break;
         }
         case 0x27: { // DAA unused
-            throw NotImplementedInstruction(0x2f);
+            throw NotImplementedInstruction(0x27);
         }
         case 0x28: { // NOP
             break;
@@ -399,6 +399,262 @@ void Emulator::emulateOp() {
         }
         case 0x3f: { // CMC
             status_.controls.c = !status_.controls.c;
+            break;
+        }
+        case 0x40: { // MOV_BB
+            status_.b = status_.b;
+            break;
+        }
+        case 0x41: { // MOV_BC
+            status_.b = status_.c;
+            break;
+        }
+        case 0x42: { // MOV_BD
+            status_.b = status_.d;
+            break;
+        }
+        case 0x43: { // MOV_BE
+            status_.b = status_.e;
+            break;
+        }
+        case 0x44: { // MOV_BH
+            status_.b = status_.h;
+            break;
+        }
+        case 0x45: { // MOV_BL
+            status_.b = status_.l;
+            break;
+        }
+        case 0x46: { // MOV_BM
+            status_.b = mem[(status_.h << 8) | (status_.l)];
+            break;
+        }
+        case 0x47: { // MOV_BA
+            status_.b = status_.a;
+            break;
+        }
+        case 0x48: { // MOV_CB
+            status_.c = status_.b;
+            break;
+        }
+        case 0x49: { // MOV_CC
+            status_.c = status_.c;
+            break;
+        }
+        case 0x4a: { // MOV_CD
+            status_.c = status_.d;
+            break;
+        }
+        case 0x4b: { // MOV_CE
+            status_.c = status_.e;
+            break;
+        }
+        case 0x4c: { // MOV_CH
+            status_.c = status_.h;
+            break;
+        }
+        case 0x4d: { // MOV_CL
+            status_.c = status_.l;
+            break;
+        }
+        case 0x4e: { // MOV_CM
+            status_.c = mem[(status_.h << 8) |  status_.l];
+            break;
+        }
+        case 0x4f: { // MOV_CA
+            status_.c = status_.a;
+            break;
+        }
+        case 0x50: { // MOV_DB
+            status_.d = status_.b;
+            break;
+        }
+        case 0x51: { // MOV_DC
+            status_.d = status_.c;
+            break;
+        }
+        case 0x52: { // MOV_DD
+            status_.d = status_.d;
+            break;
+        }
+        case 0x53: { // MOV_DE
+            status_.d = status_.e;
+            break;
+        }
+        case 0x54: { // MOV_DH
+            status_.d = status_.h;
+            break;
+        }
+        case 0x55: { // MOV_DL
+            status_.d = status_.l;
+            break;
+        }
+        case 0x56: { // MOV_DM
+            status_.d = mem[(status_.h << 8) | status_.l];
+            break;
+        }
+        case 0x57: { // MOV_DA
+            status_.d = status_.a;
+            break;
+        }
+        case 0x58: { // MOV_EB
+            status_.e = status_.b;
+            break;
+        }
+        case 0x59: { // MOV_EC
+            status_.e = status_.c;
+            break;
+        }
+        case 0x5a: { // MOV_ED
+            status_.e = status_.d;
+            break;
+        }
+        case 0x5b: { // MOV_EE
+            status_.e = status_.e;
+            break;
+        }
+        case 0x5c: { // MOV_EH
+            status_.e = status_.h;
+            break;
+        }
+        case 0x5d: { // MOV_EL
+            status_.e = status_.l;
+            break;
+        }
+        case 0x5e: { // MOV_EM
+            status_.e = mem[(status_.h << 8) | status_.l];
+            break;
+        }
+        case 0x5f: { // MOV_EA
+            status_.e = status_.a;
+            break;
+        }
+        case 0x60: { // MOV_HB
+            status_.h = status_.b;
+            break;
+        }
+        case 0x61: { // MOV_HC
+            status_.h = status_.c;
+            break;
+        }
+        case 0x62: { // MOV_HD
+            status_.h = status_.d;
+            break;
+        }
+        case 0x63: { // MOV_HE
+            status_.h = status_.e;
+            break;
+        }
+        case 0x64: { // MOV_HH
+            status_.h = status_.h;
+            break;
+        }
+        case 0x65: { // MOV_HL
+            status_.h = status_.l;
+            break;
+        }
+        case 0x66: { // MOV_HM
+            status_.h = mem[(status_.h << 8) | status_.l];
+            break;
+        }
+        case 0x67: { // MOV_HA
+            status_.h = status_.a;
+            break;
+        }
+        case 0x68: { // MOV_LB
+            status_.l = status_.b;
+            break;
+        }
+        case 0x69: { // MOV_LC
+            status_.l = status_.c;
+            break;
+        }
+        case 0x6a: { // MOV_LD
+            status_.l = status_.d;
+            break;
+        }
+        case 0x6b: { // MOV_LE
+            status_.l = status_.e;
+            break;
+        }
+        case 0x6c: { // MOV_LH
+            status_.l = status_.h;
+            break;
+        }
+        case 0x6d: { // MOV_LL
+            status_.l = status_.l;
+            break;
+        }
+        case 0x6e: { // MOV_LM
+            status_.l = mem[(status_.h << 8) | status_.l];
+            break;
+        }
+        case 0x6f: { // MOV_LA
+            status_.l = status_.a;
+            break;
+        }
+        case 0x70: { // MOV_MB
+            mem[(status_.h << 8) | status_.l] = status_.b;
+            break;
+        }
+        case 0x71: { // MOV_MC
+            mem[(status_.h << 8) | status_.l] = status_.c;
+            break;
+        }
+        case 0x72: { // MOV_MD
+            mem[(status_.h << 8) | status_.l] = status_.d;
+            break;
+        }
+        case 0x73: { // MOV_ME
+            mem[(status_.h << 8) | status_.l] = status_.e;
+            break;
+        }
+        case 0x74: { // MOV_MH
+            mem[(status_.h << 8) | status_.l] = status_.h;
+            break;
+        }
+        case 0x75: { // MOV_ML
+            mem[(status_.h << 8) | status_.l] = status_.l;
+            break;
+        }
+        case 0x76: { // HLT
+            throw NotImplementedInstruction(0x76);
+            break;
+        }
+        case 0x77: { // MOV_MA
+            mem[(status_.h << 8) | status_.l] = status_.a;
+            break;
+        }
+        case 0x78: { // MOV_AB
+            status_.a = status_.b;
+            break;
+        }
+        case 0x79: { // MOV_AC
+            status_.a = status_.c;
+            break;
+        }
+        case 0x7a: { // MOV_AD
+            status_.a = status_.d;
+            break;
+        }
+        case 0x7b: { // MOV_AE
+            status_.a = status_.e;
+            break;
+        }
+        case 0x7c: { // MOV_AH
+            status_.a = status_.h;
+            break;
+        }
+        case 0x7d: { // MOV_AL
+            status_.a = status_.l;
+            break;
+        }
+        case 0x7e: { // MOV_AM
+            status_.a = mem[(status_.h << 8) | status_.a];
+            break;
+        }
+        case 0x7f: { // MOV_AA
+            status_.a = status_.a;
             break;
         }
     }

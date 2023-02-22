@@ -273,3 +273,13 @@ TEST_F(StatusTest, CMC) {
     emulator_.emulateOp();
     EXPECT_TRUE(status.controls.c);
 }
+
+TEST_F(StatusTest,  MOV_BM) {
+    status.memory[0] = 0x46;
+    status.b = 0x00;
+    status.h = 0x10;
+    status.l = 0x01;
+    status.memory[0x1001] = 0x11;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.b, 0x11);
+}
