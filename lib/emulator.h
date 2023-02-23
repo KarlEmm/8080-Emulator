@@ -48,6 +48,10 @@ public:
 
 class Emulator {
 public:
+    void ana(Byte b);
+    void xra(Byte b);
+    void ora(Byte b);
+    void cmp(Byte b);
     void updateControls(uint16_t result, std::unordered_set<ControlFlags> const& affected);
     void emulateOp();
 

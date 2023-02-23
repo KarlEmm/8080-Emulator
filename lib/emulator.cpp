@@ -24,6 +24,30 @@ void Emulator::updateControls(uint16_t const result, std::unordered_set<ControlF
     }
 }
 
+void Emulator::ana(Byte b) {
+    status_.a &= b;
+    updateControls(status_.a, {PARITY, SIGN, ZERO});
+    status_.controls.c = false;
+}
+
+void Emulator::xra(Byte b) {
+    status_.a ^= b;
+    updateControls(status_.a, {PARITY, SIGN, ZERO});
+    status_.controls.c = false;
+}
+
+void Emulator::ora(Byte b) {
+    status_.a |= b;
+    updateControls(status_.a, {PARITY, SIGN, ZERO});
+    status_.controls.c = false;
+}
+
+void Emulator::cmp(Byte b) {
+    uint16_t tmp = (uint16_t) status_.a - (uint16_t) b;
+    updateControls(tmp, {PARITY, SIGN, ZERO});
+    status_.controls.c = status_.a < b;
+}
+
 void Emulator::emulateOp() {
     auto& mem = status_.memory;
     uint16_t pc = status_.pc;
@@ -751,6 +775,230 @@ void Emulator::emulateOp() {
             uint16_t tmp = (uint16_t) status_.a + (uint16_t) status_.a + (uint16_t) status_.controls.c;
             updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
             status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x90: { // SUB_B
+            uint16_t tmp = (uint16_t) status_.a - (uint16_t) status_.b;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x91: { // SUB_C
+            uint16_t tmp = (uint16_t) status_.a - (uint16_t) status_.c;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x92: { // SUB_D
+            uint16_t tmp = (uint16_t) status_.a - (uint16_t) status_.d;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x93: { // SUB_E
+            uint16_t tmp = (uint16_t) status_.a - (uint16_t) status_.e;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x94: { // SUB_H
+            uint16_t tmp = (uint16_t) status_.a - (uint16_t) status_.h;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x95: { // SUB_L
+            uint16_t tmp = (uint16_t) status_.a - (uint16_t) status_.l;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x96: { // SUB_M
+            uint16_t tmp = (uint16_t) status_.a - (uint16_t) mem[(status_.h << 8) | (status_.l)];
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x97: { // SUB_A
+            uint16_t tmp = (uint16_t) status_.a - (uint16_t) status_.a;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x98: { // SBB_B
+            uint16_t tmp = (uint16_t) status_.a - (uint16_t) status_.b - (uint16_t) status_.controls.c;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x99: { // SBB_C
+            uint16_t tmp = (uint16_t) status_.a - (uint16_t) status_.c - (uint16_t) status_.controls.c;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x9a: { // SBB_D
+            uint16_t tmp = (uint16_t) status_.a - (uint16_t) status_.d - (uint16_t) status_.controls.c;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x9b: { // SBB_E
+            uint16_t tmp = (uint16_t) status_.a - (uint16_t) status_.e - (uint16_t) status_.controls.c;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x9c: { // SBB_H
+            uint16_t tmp = (uint16_t) status_.a - (uint16_t) status_.h - (uint16_t) status_.controls.c;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x9d: { // SBB_L
+            uint16_t tmp = (uint16_t) status_.a - (uint16_t) status_.l - (uint16_t) status_.controls.c;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x9e: { // SBB_M
+            uint16_t tmp = (uint16_t) status_.a - (uint16_t) mem[(status_.h << 8) | (status_.l)] - (uint16_t) status_.controls.c;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0x9f: { // SBB_A
+            uint16_t tmp = (uint16_t) status_.a - (uint16_t) status_.a - (uint16_t) status_.controls.c;
+            updateControls(tmp, {SIGN, ZERO, PARITY, CARRY});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0xa0: { // ANA_B
+            ana(status_.b);
+            break;
+        }
+        case 0xa1: { // ANA_C
+            ana(status_.c);
+            break;
+        }
+        case 0xa2: { // ANA_D
+            ana(status_.d);
+            break;
+        }
+        case 0xa3: { // ANA_E
+            ana(status_.e);
+            break;
+        }
+        case 0xa4: { // ANA_H
+            ana(status_.h);
+            break;
+        }
+        case 0xa5: { // ANA_L
+            ana(status_.l);
+            break;
+        }
+        case 0xa6: { // ANA_M
+            ana(mem[(status_.h << 8) | (status_.l)]);
+            break;
+        }
+        case 0xa7: { // ANA_A
+            ana(status_.a);
+            break;
+        }
+        case 0xa8: { // XRA_B
+            xra(status_.b);
+            break;
+        }
+        case 0xa9: { // XRA_C
+            xra(status_.c);
+            break;
+        }
+        case 0xaa: { // XRA_D
+            xra(status_.d);
+            break;
+        }
+        case 0xab: { // XRA_E
+            xra(status_.e);
+            break;
+        }
+        case 0xac: { // XRA_H
+            xra(status_.h);
+            break;
+        }
+        case 0xad: { // XRA_L
+            xra(status_.l);
+            break;
+        }
+        case 0xae: { // XRA_M
+            xra(mem[(status_.h << 8) | (status_.l)]);
+            break;
+        }
+        case 0xaf: { // XRA_A
+            xra(status_.a);
+            break;
+        }
+        case 0xb0: { // ORA_B
+            ora(status_.b);
+            break;
+        }
+        case 0xb1: { // ORA_C
+            ora(status_.c);
+            break;
+        }
+        case 0xb2: { // ORA_D
+            ora(status_.d);
+            break;
+        }
+        case 0xb3: { // ORA_E
+            ora(status_.e);
+            break;
+        }
+        case 0xb4: { // ORA_H
+            ora(status_.h);
+            break;
+        }
+        case 0xb5: { // ORA_L
+            ora(status_.l);
+            break;
+        }
+        case 0xb6: { // ORA_M
+            ora(mem[(status_.h << 8) | (status_.l)]);
+            break;
+        }
+        case 0xb7: { // ORA_A
+            ora(status_.a);
+            break;
+        }
+        case 0xb8: { // CMP_B
+            ora(status_.b);
+            break;
+        }
+        case 0xb9: { // CMP_C
+            ora(status_.c);
+            break;
+        }
+        case 0xba: { // CMP_D
+            ora(status_.d);
+            break;
+        }
+        case 0xbb: { // CMP_E
+            ora(status_.e);
+            break;
+        }
+        case 0xbc: { // CMP_H
+            ora(status_.h);
+            break;
+        }
+        case 0xbd: { // CMP_L
+            ora(status_.l);
+            break;
+        }
+        case 0xbe: { // CMP_M
+            ora(mem[(status_.h << 8) | (status_.l)]);
+            break;
+        }
+        case 0xbf: { // CMP_A
+            ora(status_.a);
             break;
         }
     }

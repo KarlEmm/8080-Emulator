@@ -325,3 +325,53 @@ TEST_F(StatusTest,  ADC_B) {
     EXPECT_EQ(status.a, 0x91);
     EXPECT_FALSE(status.controls.c);
 }
+
+TEST_F(StatusTest,  SUB_B) {
+    status.memory[0] = 0x90;
+    status.a = 0x80;
+    status.b = 0x7f;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.a, 0x01);
+    EXPECT_FALSE(status.controls.c);
+
+    status.pc = 0;
+    status.a = 0x80;
+    status.b = 0x81;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.a, 0xff);
+    EXPECT_TRUE(status.controls.c);
+}
+
+TEST_F(StatusTest,  SBB_B) {
+    status.memory[0] = 0x98;
+    status.a = 0x82;
+    status.b = 0x81;
+    status.controls.c = true;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.a, 0x00);
+    EXPECT_FALSE(status.controls.c);
+
+    status.pc = 0;
+    status.a = 0x80;
+    status.b = 0x7f;
+    status.controls.c = true;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.a, 0x00);
+    EXPECT_FALSE(status.controls.c);
+
+    status.pc = 0;
+    status.a = 0x81;
+    status.b = 0x81;
+    status.controls.c = true;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.a, 0xff);
+    EXPECT_TRUE(status.controls.c);
+
+    status.pc = 0;
+    status.a = 0x81;
+    status.b = 0x80;
+    status.controls.c = false;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.a, 0x01);
+    EXPECT_FALSE(status.controls.c);
+}
