@@ -44,13 +44,40 @@ void Emulator::ora(Byte b) {
 
 void Emulator::cmp(Byte b) {
     uint16_t tmp = (uint16_t) status_.a - (uint16_t) b;
-    updateControls(tmp, {PARITY, SIGN, ZERO});
-    status_.controls.c = status_.a < b;
+    updateControls(tmp, {CARRY, PARITY, SIGN, ZERO});
+}
+
+void Emulator::pop(Byte& high, Byte& low) {
+    low = status_.memory[status_.sp];
+    high = status_.memory[status_.sp+1];
+    status_.sp += 2;
+}
+
+void Emulator::push(Byte& high, Byte& low) {
+    status_.memory[status_.sp - 1] = high;
+    status_.memory[status_.sp - 2] = low;
+    status_.sp -= 2;
+}
+
+void Emulator::ret() {
+    status_.pc = ((uint16_t) status_.memory[status_.sp + 1] << 8) | ((uint16_t) status_.memory[status_.sp]);
+    status_.sp += 2;
+}
+
+void Emulator::jmp() {
+    status_.pc = ((uint16_t) status_.memory[status_.pc+2] << 8) | ((uint16_t) status_.memory[status_.pc+1]);
+}
+
+void Emulator::call() {
+    status_.memory[status_.sp - 1] = (status_.pc >> 8);
+    status_.memory[status_.sp - 2] = (status_.pc & 0xff);
+    status_.sp -= 2;
+    status_.pc = ((uint16_t) status_.memory[status_.pc+2] << 8) | ((uint16_t) status_.memory[status_.pc+1]);
 }
 
 void Emulator::emulateOp() {
     auto& mem = status_.memory;
-    uint16_t pc = status_.pc;
+    uint16_t& pc = status_.pc;
     Byte op = mem[pc];
 
     switch (op) {
@@ -643,7 +670,6 @@ void Emulator::emulateOp() {
         }
         case 0x76: { // HLT
             throw NotImplementedInstruction(0x76);
-            break;
         }
         case 0x77: { // MOV_MA
             mem[(status_.h << 8) | status_.l] = status_.a;
@@ -970,96 +996,344 @@ void Emulator::emulateOp() {
             break;
         }
         case 0xb8: { // CMP_B
-            ora(status_.b);
+            cmp(status_.b);
             break;
         }
         case 0xb9: { // CMP_C
-            ora(status_.c);
+            cmp(status_.c);
             break;
         }
         case 0xba: { // CMP_D
-            ora(status_.d);
+            cmp(status_.d);
             break;
         }
         case 0xbb: { // CMP_E
-            ora(status_.e);
+            cmp(status_.e);
             break;
         }
         case 0xbc: { // CMP_H
-            ora(status_.h);
+            cmp(status_.h);
             break;
         }
         case 0xbd: { // CMP_L
-            ora(status_.l);
+            cmp(status_.l);
             break;
         }
         case 0xbe: { // CMP_M
-            ora(mem[(status_.h << 8) | (status_.l)]);
+            cmp(mem[(status_.h << 8) | (status_.l)]);
             break;
         }
         case 0xbf: { // CMP_A
-            ora(status_.a);
+            cmp(status_.a);
             break;
         }
-    }
+        case 0xc0: { // RNZ
+            if (status_.controls.z) break;
 
-//    uint8_t bytesInOp = 1;
-//    printf("%04x\t", pc);
-//    switch(ops[pc]) {
-//        case 0x00: { printf("NOP"); break; }
-//        case 0x01: { printf("LXI B %02x %02x", ops[pc+1], ops[pc+2]); bytesInOp += 2; break; } // Load Byte 2 and Byte 3 into rp lower and higher bytes.
-//        case 0x02: { printf("STAX B"); break; }  // Store accumulator indirect
-//        case 0x03: { printf("INX B"); break; }   // Increment rp
-//        case 0x04: { printf("INR B"); break; }   // Increment register
-//        case 0x05: { printf("DCR B"); break; }   // Decrement register
-//        case 0x06: { printf("MVI B %02x"     , ops[pc+1])           ; bytesInOp += 1; break; } // Move immediate
-//        case 0x07: { printf("RLC  "); break; }   // Rotate left
-//        case 0x08: { printf("*NOP") ; break; }
-//        case 0x09: { printf("DAD B"); break; }   // Add BC to HL into HL
-//        case 0x0a: { printf("LDAX B"); break; }  // Load rp into accumulator indirect
-//        case 0x0b: { printf("DCX B"); break; }   // Decrement rp
-//        case 0x0c: { printf("INR C"); break; }
-//        case 0x0d: { printf("DCR C"); break; }
-//        case 0x0e: { printf("MVI C %02x"     , ops[pc+1])           ; bytesInOp += 1; break; }
-//        case 0x0f: { printf("RRC  "); break; }   // Rotate right
-//        case 0x10: { printf("*NOP "); break; }
-//        case 0x11: { printf("LXI D %02x %02x", ops[pc+1], ops[pc+2]); bytesInOp += 2; break; }
-//        case 0x12: { printf("STAX D"); break; }
-//        case 0x13: { printf("INX D"); break; }
-//        case 0x14: { printf("INR D"); break; }
-//        case 0x15: { printf("DCR D"); break; }
-//        case 0x16: { printf("MVI D %02x"     , ops[pc+1])           ; bytesInOp += 1; break; }
-//        case 0x17: { printf("RAL  "); break; }   // Rotate left through carry bit
-//        case 0x18: { printf("*NOP"); break; }
-//        case 0x19: { printf("DAD D"); break; }
-//        case 0x1a: { printf("LDAX D"); break; }
-//        case 0x1b: { printf("DCX D"); break; }
-//        case 0x1c: { printf("INR E"); break; }
-//        case 0x1d: { printf("DCR E"); break; }
-//        case 0x1e: { printf("MVI E %02x"     , ops[pc+1])           ; bytesInOp += 1; break; }
-//        case 0x1f: { printf("RAR  "); break; }
-//        case 0x20: { printf("*NOP "); break; }
-//        case 0x21: { printf("LXI H %02x %02x", ops[pc+1], ops[pc+2]); bytesInOp += 2; break; }
-//        case 0x22: { printf("SHLD %02x %02x" , ops[pc+1], ops[pc+2]); bytesInOp += 2; break; } // (byte3 byte2) <- L and (byte3 byte2 + 1) <- H
-//        case 0x23: { printf("INX H"); break; }
-//        case 0x24: { printf("INR H"); break; }
-//        case 0x25: { printf("DCR H"); break; }
-//        case 0x26: { printf("MVI H %02x"     , ops[pc+1])           ; bytesInOp += 1; break; }
-//        case 0x27: { printf("DAA") ; break; } // TODO: Not clear to me
-//        case 0x28: { printf("*NOP"); break; }
-//        case 0x29: { printf("DAD H"); break; }
-//        case 0x2a: { printf("LHLD %02x %02x" , ops[pc+1], ops[pc+2]); bytesInOp += 2; break; } // L <- (byte3 byte2) and H <- (byte3 byte2 + 1)
-//        case 0x2b: { printf("DCX H"); break; }
-//        case 0x2c: { printf("INR L"); break; }
-//        case 0x2d: { printf("DCR L"); break; }
-//        case 0x2e: { printf("MVI L %02x"     , ops[pc+1])           ; bytesInOp += 1; break; }
-//        case 0x2f: { printf("CNA  "); break; } // Complement accumulator
-//        case 0x84: { printf("ADD L"); break; }
-//        case 0x85: { printf("ADD M"); break; }
-//        case 0xa5: { printf("ANA L"); break; }
-//    }
-//
-//    printf("\n");
-//
-//    return bytesInOp;
+            status_.pc = (mem[status_.sp+1] << 8) | (mem[status_.sp]);
+            status_.sp += 2;
+            break;
+        }
+        case 0xc1: { // POP_B
+            pop(status_.b, status_.c);
+            break;
+        }
+        case 0xc2: { // JNZ
+            if (status_.controls.z) break;
+            jmp();
+            break;
+        }
+        case 0xc3: { // JMP
+            status_.pc = ((uint16_t) mem[pc+2] << 8) | ((uint16_t) mem[pc+1]);
+            break;
+        }
+        case 0xc4: { // CNZ
+            if (status_.controls.z) break;
+            call();
+            break;
+        }
+        case 0xc5: { // PUSH_B
+            push(status_.b, status_.c);
+            break;
+        }
+        case 0xc6: { // ADI
+            uint16_t tmp = (uint16_t) status_.a + (uint16_t) mem[pc+1];
+            updateControls(tmp, {CARRY, PARITY, SIGN, ZERO});
+            status_.a = tmp & 0xff;
+            ++status_.pc;
+            break;
+        }
+        case 0xc7: { // RST_0
+            throw NotImplementedInstruction(0xc7);
+        }
+        case 0xc8: { // RZ
+            if (!status_.controls.z) break;
+            ret();
+            break;
+        }
+        case 0xc9: { // RET
+            ret();
+            break;
+        }
+        case 0xca: { // JZ
+            if (!status_.controls.z) break;
+            jmp();
+            break;
+        }
+        case 0xcb: { // JMP
+            status_.pc = ((uint16_t) mem[status_.pc+2] << 8) | ((uint16_t) mem[status_.pc+1]);
+            break;
+        }
+        case 0xcc: { // CZ
+            if (!status_.controls.z) break;
+            call();
+            break;
+        }
+        case 0xcd: { // CALL
+            call();
+            break;
+        }
+        case 0xce: { // ACI
+            uint16_t tmp = (uint16_t) status_.a + (uint16_t) mem[pc+1] + status_.controls.c;
+            updateControls(tmp, {CARRY, PARITY, SIGN, ZERO});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0xcf: { // RST_1
+            throw NotImplementedInstruction(0xcf);
+        }
+        case 0xd0: { // RNC
+            if (status_.controls.c) break;
+            ret();
+            break;
+        }
+        case 0xd1: { // POP_D
+            pop(status_.d, status_.e);
+            break;
+        }
+        case 0xd2: { // JNC
+            if (status_.controls.c) break;
+            jmp();
+            break;
+        }
+        case 0xd3: { // OUT
+            ++status_.pc;
+            break;
+        }
+        case 0xd4: { // CNC
+            if (status_.controls.c) break;
+            call();
+            break;
+        }
+        case 0xd5: { // PUSH_D
+            push(status_.d, status_.e);
+            break;
+        }
+        case 0xd6: { // SUI
+            uint16_t tmp = (uint16_t) status_.a - (uint16_t) mem[pc+1];
+            updateControls(tmp, {CARRY, PARITY, SIGN, ZERO});
+            status_.a = tmp & 0xff;
+            ++status_.pc;
+            break;
+        }
+        case 0xd7: { // RST_2
+            throw NotImplementedInstruction(0xd7);
+        }
+        case 0xd8: { // RC
+            if (!status_.controls.c) break;
+            ret();
+            break;
+        }
+        case 0xd9: { // RET
+            ret();
+            break;
+        }
+        case 0xda: { // JC
+            if (!status_.controls.c) break;
+            jmp();
+            break;
+        }
+        case 0xdb: { // IN
+            ++status_.pc;
+            break;
+        }
+        case 0xdc: { // CC
+            if (!status_.controls.c) break;
+            call();
+            break;
+        }
+        case 0xdd: { // CALL
+            call();
+            break;
+        }
+        case 0xde: { // SBI
+            uint16_t tmp = (uint16_t) status_.a - (uint16_t) mem[pc+1] - status_.controls.c;
+            updateControls(tmp, {CARRY, PARITY, SIGN, ZERO});
+            status_.a = tmp & 0xff;
+            break;
+        }
+        case 0xdf: { // RST_3
+            throw NotImplementedInstruction(0xdf);
+        }
+        case 0xe0: { // RPO
+            if (status_.controls.p) break;
+            ret();
+            break;
+        }
+        case 0xe1: { // POP_H
+            pop(status_.h, status_.l);
+            break;
+        }
+        case 0xe2: { // JPO
+            if (status_.controls.p) break;
+            jmp();
+            break;
+        }
+        case 0xe3: { // XTHL
+            Byte tmp = status_.h;
+            status_.h = mem[status_.sp+1];
+            mem[status_.sp+1] = tmp;
+            tmp = status_.l;
+            status_.l = mem[status_.sp];
+            mem[status_.sp] = tmp;
+            break;
+        }
+        case 0xe4: { // CPO
+            if (status_.controls.p) break;
+            call();
+            break;
+        }
+        case 0xe5: { // PUSH_H
+            push(status_.h, status_.l);
+            break;
+        }
+        case 0xe6: { // ANI
+            ana(mem[status_.pc+1]);
+            ++status_.pc;
+            break;
+        }
+        case 0xe7: { // RST_4
+            throw NotImplementedInstruction(0xe7);
+        }
+        case 0xe8: { // RPE
+            if (!status_.controls.p) break;
+            ret();
+            break;
+        }
+        case 0xe9: { // PCHL
+            status_.pc = ((uint16_t) status_.h << 8) | (status_.l);
+            break;
+        }
+        case 0xea: { // JPE
+            if (!status_.controls.p) break;
+            jmp();
+            break;
+        }
+        case 0xeb: { // XCHG
+            Byte tmp = status_.h;
+            status_.h = status_.d;
+            status_.d = tmp;
+            tmp = status_.l;
+            status_.l = status_.e;
+            status_.e = tmp;
+            break;
+        }
+        case 0xec: { // CPE
+            if (!status_.controls.p) break;
+            call();
+            break;
+        }
+        case 0xed: { // CALL
+            call();
+            break;
+        }
+        case 0xee: { // XRI
+            xra(mem[status_.pc+1]);
+            ++status_.pc;
+            break;
+        }
+        case 0xef: { // RST_5
+            throw NotImplementedInstruction(0xef);
+        }
+        case 0xf0: { // RP
+            if (status_.controls.s) break;
+            ret();
+            break;
+        }
+        case 0xf1: { // POP_PSW
+            Byte b = mem[status_.sp];
+            status_.controls.c = b & 0x01;
+            status_.controls.p = b & 0x04;
+            status_.controls.z = b & 0x40;
+            status_.controls.s = b & 0x80;
+            status_.a = mem[status_.sp+1];
+            status_.sp += 2;
+            break;
+        }
+        case 0xf2: { // JP
+            if (status_.controls.s) break;
+            jmp();
+            break;
+        }
+        case 0xf3: { // DI
+            status_.is_interrupt_enabled = false;
+            break;
+        }
+        case 0xf4: { // CP
+            if (status_.controls.s) break;
+            call();
+            break;
+        }
+        case 0xf5: { // PUSH_PSW
+            mem[status_.sp-1] = status_.a;
+            Controls const& controls = status_.controls;
+            Byte psw = controls.s << 7 | controls.z << 6 | controls.p << 2 | 0x02 | controls.c;
+            mem[status_.sp-2] = psw;
+            status_.sp -= 2;
+            break;
+        }
+        case 0xf6: { // ORI
+            ora(mem[status_.pc+1]);
+            ++status_.pc;
+            break;
+        }
+        case 0xf7: { // RST_6
+            throw NotImplementedInstruction(0xf7);
+        }
+        case 0xf8: { // RM
+            if (!status_.controls.s) break;
+            ret();
+            break;
+        }
+        case 0xf9: { // SPHL
+            status_.sp = ((uint16_t) status_.h << 8) | (status_.l);
+            break;
+        }
+        case 0xfa: { // JM
+            if (!status_.controls.s) break;
+            jmp();
+            break;
+        }
+        case 0xfb: { // EI
+            status_.is_interrupt_enabled = true;
+            break;
+        }
+        case 0xfc: { // CM
+            if (!status_.controls.s) break;
+            call();
+            break;
+        }
+        case 0xfd: { // CALL
+            call();
+            break;
+        }
+        case 0xfe: { // CPI
+            cmp(mem[status_.pc+1]);
+            ++status_.pc;
+            break;
+        }
+        case 0xff: { // RST_7
+            throw NotImplementedInstruction(0xff);
+        }
+    }
 }

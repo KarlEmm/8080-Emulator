@@ -375,3 +375,282 @@ TEST_F(StatusTest,  SBB_B) {
     EXPECT_EQ(status.a, 0x01);
     EXPECT_FALSE(status.controls.c);
 }
+
+TEST_F(StatusTest,  RNZ) {
+    status.pc = 0;
+    status.sp = 0x3000;
+    status.memory[0] = 0xc0;
+    status.memory[status.sp] = 0x20;
+    status.memory[status.sp+1] = 0x10;
+    status.controls.z = false;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.pc, 0x1020);
+    EXPECT_EQ(status.sp, 0x3002);
+
+    status.pc = 0;
+    status.sp = 0x3000;
+    status.controls.z = true;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.pc, 0x0);
+    EXPECT_EQ(status.sp, 0x3000);
+}
+
+TEST_F(StatusTest,  POP_B) {
+    status.pc = 0;
+    status.sp = 0x3000;
+    status.memory[0] = 0xc1;
+    status.memory[status.sp] = 0x20;
+    status.memory[status.sp+1] = 0x10;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.b, 0x10);
+    EXPECT_EQ(status.c, 0x20);
+    EXPECT_EQ(status.sp, 0x3002);
+}
+
+TEST_F(StatusTest,  JNZ) {
+    status.pc = 0;
+    status.sp = 0x3000;
+    status.memory[0] = 0xc2;
+    status.memory[1] = 0x12;
+    status.memory[2] = 0x34;
+    status.controls.z = false;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.pc, 0x3412);
+
+    status.pc = 0;
+    status.controls.z = true;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.pc, 0x0000);
+}
+
+TEST_F(StatusTest, JMP) {
+    status.pc = 0;
+    status.memory[0] = 0xc3;
+    status.memory[1] = 0x10;
+    status.memory[2] = 0x20;
+
+    emulator_.emulateOp();
+    EXPECT_EQ(status.pc, 0x2010);
+}
+
+TEST_F(StatusTest, CNZ) {
+    status.pc = 0x1122;
+    status.memory[status.pc] = 0xc4;
+    status.sp = 0x3000;
+    status.memory[status.sp-1] = 0x00;
+    status.memory[status.sp-2] = 0x00;
+    status.memory[0x1123] = 0x15;
+    status.memory[0x1124] = 0x16;
+
+    status.controls.z = false;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.memory[0x2fff], 0x11);
+    EXPECT_EQ(status.memory[0x2ffe], 0x22);
+    EXPECT_EQ(status.sp, 0x2ffe);
+    EXPECT_EQ(status.pc, 0x1615);
+
+    status.pc = 0x1122;
+    status.memory[status.pc] = 0xc4;
+    status.sp = 0x3000;
+    status.memory[status.sp-1] = 0x00;
+    status.memory[status.sp-2] = 0x00;
+    status.memory[0x1123] = 0x15;
+    status.memory[0x1124] = 0x16;
+
+    status.controls.z = true;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.memory[0x2fff], 0x00);
+    EXPECT_EQ(status.memory[0x2ffe], 0x00);
+    EXPECT_EQ(status.sp, 0x3000);
+    EXPECT_EQ(status.pc, 0x1122);
+}
+
+TEST_F(StatusTest, PUSH_B) {
+    status.pc = 0x00;
+    status.memory[status.pc] = 0xc5;
+    status.sp = 0x5566;
+    status.memory[status.sp-1] = 0x00;
+    status.memory[status.sp-2] = 0x00;
+    status.b = 0x11;
+    status.c = 0x22;
+    emulator_.emulateOp();
+
+    EXPECT_EQ(status.memory[0x5565], 0x11);
+    EXPECT_EQ(status.memory[0x5564], 0x22);
+    EXPECT_EQ(status.sp, 0x5564);
+}
+
+TEST_F(StatusTest, ADI) {
+    status.memory[status.pc] = 0xc6;
+    status.a = 0xff;
+    status.memory[status.pc+1] = 0x01;
+    emulator_.emulateOp();
+
+    EXPECT_EQ(status.a, 0x00);
+    EXPECT_TRUE(status.controls.c);
+    EXPECT_TRUE(status.controls.z);
+    EXPECT_FALSE(status.controls.s);
+
+    status.pc = 0x0000;
+    status.a = 0xfe;
+    emulator_.emulateOp();
+
+    EXPECT_EQ(status.a, 0xff);
+    EXPECT_FALSE(status.controls.c);
+    EXPECT_FALSE(status.controls.z);
+    EXPECT_TRUE(status.controls.s);
+}
+
+TEST_F(StatusTest, RZ) {
+    status.memory[status.pc] = 0xc8;
+    status.sp = 0x3000;
+    status.memory[status.sp] = 0x10;
+    status.memory[status.sp+1] = 0x20;
+    status.controls.z = true;
+
+    emulator_.emulateOp();
+
+    EXPECT_EQ(status.pc, 0x2010);
+    EXPECT_EQ(status.sp, 0x3002);
+
+    status.pc = 0;
+    status.sp = 0x3000;
+    status.memory[status.sp] = 0x10;
+    status.memory[status.sp+1] = 0x20;
+    status.controls.z = false;
+
+    emulator_.emulateOp();
+
+    EXPECT_EQ(status.pc, 0x0000);
+    EXPECT_EQ(status.sp, 0x3000);
+}
+
+TEST_F(StatusTest, JZ) {
+    status.memory[status.pc] = 0xca;
+    status.memory[status.pc+1] = 0x10;
+    status.memory[status.pc+2] = 0x30;
+    status.controls.z = true;
+
+    emulator_.emulateOp();
+
+    EXPECT_EQ(status.pc, 0x3010);
+
+    status.pc = 0;
+    status.memory[status.pc+1] = 0x10;
+    status.memory[status.pc+2] = 0x30;
+    status.controls.z = false;
+
+    emulator_.emulateOp();
+
+    EXPECT_EQ(status.pc, 0x0000);
+}
+
+TEST_F(StatusTest, ACI) {
+    status.memory[status.pc] = 0xce;
+    status.a = 0xfe;
+    status.memory[status.pc+1] = 0x01;
+    status.controls.c = true;
+    emulator_.emulateOp();
+
+    EXPECT_EQ(status.a, 0x00);
+    EXPECT_TRUE(status.controls.c);
+    EXPECT_TRUE(status.controls.z);
+    EXPECT_FALSE(status.controls.s);
+
+    status.a = 0xfd;
+    status.controls.c = false;
+    emulator_.emulateOp();
+
+    EXPECT_EQ(status.a, 0xfe);
+    EXPECT_FALSE(status.controls.c);
+    EXPECT_FALSE(status.controls.z);
+    EXPECT_TRUE(status.controls.s);
+}
+
+TEST_F(StatusTest, IN) {
+    EXPECT_TRUE(false);
+}
+
+TEST_F(StatusTest, OUT) {
+    EXPECT_TRUE(false);
+}
+
+TEST_F(StatusTest, XCHG) {
+    status.memory[status.pc] = 0xeb;
+    status.d = 0x33;
+    status.e = 0x44;
+    status.h = 0x11;
+    status.l = 0x22;
+
+    emulator_.emulateOp();
+
+    EXPECT_EQ(status.d, 0x11);
+    EXPECT_EQ(status.e, 0x22);
+    EXPECT_EQ(status.h, 0x33);
+    EXPECT_EQ(status.l, 0x44);
+}
+
+TEST_F(StatusTest, PCHL) {
+    status.memory[status.pc] = 0xe9;
+    status.h = 0x11;
+    status.l = 0x22;
+
+    emulator_.emulateOp();
+
+    EXPECT_EQ(status.pc, 0x1122);
+}
+
+TEST_F(StatusTest, POP_PSW) {
+    status.memory[status.pc] = 0xf1;
+    status.sp = 0x3000;
+    status.memory[status.sp] = 0xc5;
+    status.memory[status.sp+1] = 0x88;
+    status.a = 0x00;
+    status.controls.c = false;
+    status.controls.p = false;
+    status.controls.s = false;
+    status.controls.z = false;
+
+    emulator_.emulateOp();
+
+    EXPECT_EQ(status.a, 0x88);
+    EXPECT_EQ(status.sp, 0x3002);
+    EXPECT_TRUE(status.controls.c);
+    EXPECT_TRUE(status.controls.p);
+    EXPECT_TRUE(status.controls.s);
+    EXPECT_TRUE(status.controls.z);
+}
+
+TEST_F(StatusTest, XTHL) {
+    status.memory[status.pc] = 0xe3;
+    status.sp = 0x3000;
+    status.memory[status.sp] = 0x33;
+    status.memory[status.sp+1] = 0x44;
+    status.h = 0x11;
+    status.l = 0x22;
+
+    emulator_.emulateOp();
+
+    EXPECT_EQ(status.memory[status.sp], 0x22);
+    EXPECT_EQ(status.memory[status.sp+1], 0x11);
+    EXPECT_EQ(status.h, 0x44);
+    EXPECT_EQ(status.l, 0x33);
+}
+
+TEST_F(StatusTest, PUSH_PSW) {
+    status.memory[status.pc] = 0xf5;
+    status.sp = 0x0005;
+    status.memory[status.sp-1] = 0x20;
+    status.memory[status.sp-2] = 0x10;
+    status.a = 0x05;
+    status.controls.c = true;
+    status.controls.p = true;
+    status.controls.s = true;
+    status.controls.z = true;
+
+    emulator_.emulateOp();
+
+    EXPECT_EQ(status.memory[0x0004], 0x05);
+    EXPECT_EQ(status.memory[0x0003], 0xc7);
+    EXPECT_EQ(status.sp, 0x0003);
+}

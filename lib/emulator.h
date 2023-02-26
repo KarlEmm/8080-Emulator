@@ -35,6 +35,7 @@ public:
     std::vector<Byte> memory;
 
     Controls controls;
+    bool is_interrupt_enabled {true};
 };
 
 class NotImplementedInstruction : public std::exception {
@@ -52,6 +53,11 @@ public:
     void xra(Byte b);
     void ora(Byte b);
     void cmp(Byte b);
+    void pop(Byte& high, Byte& low);
+    void push(Byte& high, Byte& low);
+    void ret();
+    void jmp();
+    void call();
     void updateControls(uint16_t result, std::unordered_set<ControlFlags> const& affected);
     void emulateOp();
 
