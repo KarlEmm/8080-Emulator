@@ -114,22 +114,29 @@ TEST_F(StatusTest, RLC) {
 
 TEST_F(StatusTest, DAD_B) {
     status.memory[0] = 0x09;
-    status.b = 0x00;
+    status.b = 0x02;
     status.c = 0x01;
     status.h = 0x80;
     status.l = 0x01;
-    status.memory[0x0001] = 255;
-    status.memory[0x8001] = 1;
+
     emulator_.emulateOp();
-    EXPECT_EQ(status.memory[0x8001], 0x00);
-    EXPECT_TRUE(status.controls.c);
+
+    EXPECT_EQ(status.h, 0x82);
+    EXPECT_EQ(status.l, 0x02);
+    EXPECT_FALSE(status.controls.c);
 
     status.pc = 0;
-    status.memory[0x0001] = 0x02;
-    status.memory[0x8001] = 0x03;
+    status.controls.c = false;
+    status.b = 0x82;
+    status.c = 0x02;
+    status.h = 0x80;
+    status.l = 0x01;
+
     emulator_.emulateOp();
-    EXPECT_EQ(status.memory[0x8001], 0x05);
-    EXPECT_FALSE(status.controls.c);
+
+    EXPECT_EQ(status.h, 0x02);
+    EXPECT_EQ(status.l, 0x03);
+    EXPECT_TRUE(status.controls.c);
 }
 
 TEST_F(StatusTest, LDAX_B) {
@@ -146,9 +153,16 @@ TEST_F(StatusTest, DCX_B) {
     status.memory[0] = 0x0b;
     status.b = 0x01;
     status.c = 0x02;
-    status.memory[0x0102] = 0x05;
     emulator_.emulateOp();
-    EXPECT_EQ(status.memory[0x0102], 0x04);
+    EXPECT_EQ(status.b, 0x01);
+    EXPECT_EQ(status.c, 0x01);
+
+    status.pc = 0;
+    status.b = 0x01;
+    status.c = 0x00;
+    emulator_.emulateOp();
+    EXPECT_EQ(status.b, 0x00);
+    EXPECT_EQ(status.c, 0xff);
 }
 
 TEST_F(StatusTest, RRC) {
@@ -557,6 +571,7 @@ TEST_F(StatusTest, ACI) {
     EXPECT_TRUE(status.controls.z);
     EXPECT_FALSE(status.controls.s);
 
+    status.pc = 0x0000;
     status.a = 0xfd;
     status.controls.c = false;
     emulator_.emulateOp();

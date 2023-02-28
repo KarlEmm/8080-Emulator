@@ -36,6 +36,7 @@ public:
 
     Controls controls;
     bool is_interrupt_enabled {true};
+
 };
 
 class NotImplementedInstruction : public std::exception {
@@ -58,8 +59,26 @@ public:
     void ret();
     void jmp();
     void call();
+    void loadi(Byte& rpHigh, Byte& rpLow);
+    void loadsp();
+    void ldax(Byte const& rpHigh, Byte const& rpLow);
+    void stax(Byte const& rpHigh, Byte const& rpLow);
+    void inx(Byte& rpHigh, Byte& rpLow);
+    void dcx(Byte& rpHigh, Byte& rpLow);
+    void inr(Byte& regr);
+    void dcr(Byte& regr);
+    void mvi(Byte& regr);
+    void mov(Byte& dest, Byte const& src);
+    void dad(Byte const& rpHigh, Byte const& rpLow);
+    void add(Byte& dest, Byte const& operand);
+    void adc(Byte& dest, Byte const& operand);
+    void sub(Byte& dest, Byte const& operand);
+    void sbb(Byte& dest, Byte const& operand);
     void updateControls(uint16_t result, std::unordered_set<ControlFlags> const& affected);
+    void emulate();
     void emulateOp();
+
+    void setMemory(std::string const& filename);
 
     Status status_;
 };
